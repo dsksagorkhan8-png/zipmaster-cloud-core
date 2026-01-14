@@ -1,0 +1,268 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZIPMASTER | COMMANDER SAGOR (Elite TWA Edition)</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="activity-bar">
+            <div class="activity-icons">
+                <div class="activity-icon active" data-view="explorer">
+                    <i class="fas fa-folder"></i>
+                </div>
+                <div class="activity-icon" data-view="search">
+                    <i class="fas fa-search"></i>
+                </div>
+                <div class="activity-icon" data-view="admin">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <div class="activity-icon" data-view="ads">
+                    <i class="fas fa-ad"></i>
+                </div>
+                <div class="activity-icon" data-view="notifications">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">0</span>
+                </div>
+            </div>
+            <div class="user-section">
+                <button id="login-btn" class="btn-login">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+                <div id="user-info" class="hidden">
+                    <img id="user-avatar" src="" alt="Avatar">
+                    <span id="user-name"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="sidebar-view active" id="explorer-view">
+                <div class="sidebar-header">
+                    <h3>EXPLORER</h3>
+                    <div class="sidebar-actions">
+                        <button class="icon-btn" id="new-file">
+                            <i class="fas fa-file"></i>
+                        </button>
+                        <button class="icon-btn" id="new-folder">
+                            <i class="fas fa-folder-plus"></i>
+                        </button>
+                        <button class="icon-btn" id="refresh-explorer">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="file-tree" id="file-tree"></div>
+            </div>
+
+            <div class="sidebar-view" id="search-view">
+                <div class="sidebar-header">
+                    <h3>GLOBAL SEARCH</h3>
+                </div>
+                <div class="search-container">
+                    <input type="text" id="global-search" placeholder="Search across all files...">
+                    <div class="search-options">
+                        <label><input type="checkbox" id="regex-search"> Regex</label>
+                        <label><input type="checkbox" id="case-sensitive"> Case Sensitive</label>
+                    </div>
+                    <button id="search-btn" class="btn-primary">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <div class="search-results" id="search-results"></div>
+                </div>
+            </div>
+
+            <div class="sidebar-view" id="admin-view">
+                <div class="sidebar-header">
+                    <h3>ADMIN CONTROL</h3>
+                    <div class="admin-status" id="admin-status">
+                        <span class="status-dot"></span>
+                        <span>Offline</span>
+                    </div>
+                </div>
+                <div class="admin-controls">
+                    <button class="admin-btn" id="go-to-dashboard">
+                        <i class="fas fa-tachometer-alt"></i> Full Dashboard
+                    </button>
+                    <button class="admin-btn" id="clear-logs">
+                        <i class="fas fa-trash"></i> Clear Logs
+                    </button>
+                    <button class="admin-btn" id="backup-now">
+                        <i class="fas fa-cloud-upload-alt"></i> Backup Now
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-view" id="ads-view">
+                <div class="sidebar-header">
+                    <h3>ADS MANAGER</h3>
+                    <div class="ads-toggle">
+                        <label class="switch">
+                            <input type="checkbox" id="ads-toggle">
+                            <span class="slider"></span>
+                        </label>
+                        <span>Ads Enabled</span>
+                    </div>
+                </div>
+                <div class="ads-controls">
+                    <div class="form-group">
+                        <label>Ad Interval (seconds)</label>
+                        <input type="number" id="ad-interval" value="60" min="10">
+                    </div>
+                    <div class="form-group">
+                        <label>Ad Type</label>
+                        <select id="ad-type">
+                            <option value="adsense">AdSense</option>
+                            <option value="adsterra">Adsterra</option>
+                            <option value="custom">Custom JS</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Ad Code</label>
+                        <textarea id="ad-code" placeholder="Paste your ad code here..."></textarea>
+                    </div>
+                    <button class="btn-primary" id="save-ads">
+                        <i class="fas fa-save"></i> Save Settings
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-view" id="notifications-view">
+                <div class="sidebar-header">
+                    <h3>NOTIFICATIONS</h3>
+                    <button class="icon-btn" id="clear-notifications">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <div class="notifications-list" id="notifications-list"></div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="editor-tabs" id="editor-tabs"></div>
+            <div class="editor-container">
+                <div id="editor" class="editor"></div>
+                <div id="mobile-editor" class="mobile-editor hidden"></div>
+            </div>
+            <div class="status-bar">
+                <div class="status-item">
+                    <i class="fas fa-code-branch"></i>
+                    <span id="git-branch">main</span>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-code"></i>
+                    <span id="language-mode">Plain Text</span>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-ruler-combined"></i>
+                    <span id="cursor-position">Ln 1, Col 1</span>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-save"></i>
+                    <span id="save-status">Saved</span>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-wifi"></i>
+                    <span id="connection-status">Online</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="notification-system">
+            <div class="floating-popup hidden" id="floating-popup">
+                <div class="popup-header">
+                    <img id="popup-img" src="" alt="">
+                    <button class="popup-close" id="close-popup">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="popup-body">
+                    <h3 id="popup-title"></h3>
+                    <p id="popup-desc"></p>
+                    <button class="btn-primary" id="popup-cta"></button>
+                </div>
+            </div>
+            <div class="marquee-top hidden" id="marquee-top">
+                <marquee behavior="scroll" direction="left">
+                    <span id="marquee-text-top"></span>
+                </marquee>
+            </div>
+            <div class="marquee-bottom hidden" id="marquee-bottom">
+                <marquee behavior="scroll" direction="right">
+                    <span id="marquee-text-bottom"></span>
+                </marquee>
+            </div>
+            <div class="urgent-alert hidden" id="urgent-alert">
+                <div class="alert-content">
+                    <i class="fas fa-phone-slash"></i>
+                    <div class="alert-text">
+                        <strong>URGENT ALERT</strong>
+                        <span id="alert-message"></span>
+                    </div>
+                    <button class="alert-close" id="close-alert">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="ad-container hidden" id="ad-container">
+                <div class="ad-header">
+                    <span>Advertisement</span>
+                    <button class="ad-close" id="close-ad">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="ad-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal hidden" id="login-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Admin Authentication</h3>
+                <button class="modal-close" id="close-login">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="login-email" placeholder="msagorkhan953@gmail.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="login-password" placeholder="sagor7171SR">
+                </div>
+                <button class="btn-primary btn-block" id="do-login">
+                    <i class="fas fa-lock"></i> Login as Admin
+                </button>
+                <div class="login-note">
+                    UID: roW0dI8pMvRae9chw9mkEq3XT2c2
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="context-menu hidden" id="file-context-menu">
+        <div class="context-item" data-action="rename">
+            <i class="fas fa-edit"></i> Rename
+        </div>
+        <div class="context-item" data-action="delete">
+            <i class="fas fa-trash"></i> Delete
+        </div>
+        <div class="context-item" data-action="download">
+            <i class="fas fa-download"></i> Download
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
